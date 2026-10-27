@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:atv1_localizacoes/features/localizacoes/data/repositories/repositorio_localizacoes.dart';
-import 'package:atv1_localizacoes/features/localizacoes/models/localizacao.dart';
 import 'package:atv1_localizacoes/features/localizacoes/presentation/screens/tela_coleta.dart';
 import 'package:atv1_localizacoes/features/localizacoes/services/servico_localizacao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
+
+import 'fakes/repositorio_falso.dart';
 
 class ServicoFalso implements ServicoLocalizacao {
   SituacaoColeta situacao = SituacaoColeta.pronta;
@@ -39,23 +39,6 @@ class ServicoFalso implements ServicoLocalizacao {
     aberturasConfigLocalizacao++;
     return true;
   }
-}
-
-class RepositorioFalso implements RepositorioLocalizacoes {
-  final gravadas = <Localizacao>[];
-
-  @override
-  Future<int> inserir(Localizacao localizacao) async {
-    gravadas.add(localizacao);
-    return gravadas.length;
-  }
-
-  @override
-  Future<List<Localizacao>> consultarRecentes({int limite = 100}) async =>
-      gravadas;
-
-  @override
-  Future<void> excluirTodas() async => gravadas.clear();
 }
 
 Position _posicao(double lat) => Position(
