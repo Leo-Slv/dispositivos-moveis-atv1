@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../data/repositories/repositorio_localizacoes.dart';
 import '../../models/localizacao.dart';
 import '../../services/servico_localizacao.dart';
+import 'tela_localizacoes.dart';
 
 class TelaColeta extends StatefulWidget {
   const TelaColeta({
@@ -69,6 +70,17 @@ class _TelaColetaState extends State<TelaColeta> {
     if (assinatura == null) return;
     setState(() => _assinatura = null);
     await assinatura.cancel();
+  }
+
+  Future<void> _abrirHistorico() {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TelaLocalizacoes(
+          repositorio: widget.repositorio,
+          coletando: _coletando,
+        ),
+      ),
+    );
   }
 
   void _aoReceber(Position posicao) {
@@ -189,6 +201,12 @@ class _TelaColetaState extends State<TelaColeta> {
               onPressed: coletando ? _parar : null,
               icon: const Icon(Icons.stop),
               label: const Text('Parar coleta'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _abrirHistorico,
+              icon: const Icon(Icons.history),
+              label: const Text('Consultar histórico'),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

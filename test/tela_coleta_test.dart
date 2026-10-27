@@ -208,6 +208,39 @@ void main() {
     expect(servico.aberturasConfigApp, 1);
   });
 
+  testWidgets('Consultar histórico abre a tela de histórico', (tester) async {
+    await abrirTela(tester);
+
+    await tester.tap(botao('Consultar histórico'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Histórico'), findsOneWidget);
+  });
+
+  testWidgets(
+    'coleta segue ativa e gravando ao navegar e atualizar o histórico',
+    (tester) async {
+      await abrirTela(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(botao('Consultar histórico'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Atualizar'));
+      await tester.pumpAndSettle();
+
+      expect(servico.controlador.hasListener, isTrue);
+      servico.controlador.add(_posicao(-23.3));
+      await tester.pumpAndSettle();
+      expect(repositorio.gravadas.map((l) => l.latitude), [-23.3]);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(servico.controlador.hasListener, isTrue);
+      expect(habilitado(tester, 'Parar coleta'), isTrue);
+    },
+  );
+
   testWidgets('descartar a tela cancela a assinatura', (tester) async {
     await abrirTela(tester);
     await tester.tap(botao('Iniciar coleta'));
