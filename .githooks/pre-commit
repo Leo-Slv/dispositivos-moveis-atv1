@@ -1,0 +1,7 @@
+#!/bin/sh
+# Bloqueia o commit se format, analyze ou testes falharem (roda no Docker).
+echo "Rodando verificações de qualidade (docker compose run qa)..."
+MSYS_NO_PATHCONV=1 docker compose run --rm -T qa || {
+  echo "Verificações falharam. Corrija antes de commitar."
+  exit 1
+}
