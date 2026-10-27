@@ -29,9 +29,9 @@ Arquivos: `servico_localizacao.dart`, `tela_coleta.dart`, `repositorio_localizac
 
 ## Critérios de aceite
 
-- [ ] GPS desligado e permissão negada geram orientação ao usuário.
-- [ ] Duplo toque em Iniciar não cria duas assinaturas.
+- [x] GPS desligado e permissão negada geram orientação ao usuário.
+- [x] Duplo toque em Iniciar não cria duas assinaturas.
 - [ ] Coleta segue ativa com o app minimizado (notificação visível no Android).
-- [ ] Parar cancela a assinatura.
-- [ ] Sem `Timer.periodic` nem `workmanager`.
-- [ ] "Configurações de permissão" abre as configurações do app.
+- [x] Parar cancela a assinatura.
+- [x] Sem `Timer.periodic` nem `workmanager`.
+- [x] "Configurações de permissão" abre as configurações do app.
