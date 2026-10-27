@@ -32,7 +32,7 @@ Arquivo `localizacoes.db`, tabela `localizacoes`:
 
 ## Critérios de aceite
 
-- [ ] Esquema idêntico ao especificado.
-- [ ] Instante gravado em UTC ISO 8601 e exibido em hora local.
-- [ ] Limpar mantém a estrutura da tabela.
-- [ ] Reabertura da conexão após falha.
+- [x] Esquema idêntico ao especificado.
+- [x] Instante gravado em UTC ISO 8601 e exibido em hora local.
+- [x] Limpar mantém a estrutura da tabela.
+- [x] Reabertura da conexão após falha.
