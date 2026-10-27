@@ -14,10 +14,11 @@ docker compose run --rm flutter dart format lib test
 docker compose run --rm flutter flutter analyze
 docker compose run --rm flutter flutter test
 docker compose run --rm qa            # format (checagem) + analyze + test
-docker compose run --rm flutter flutter build apk --debug
+docker compose run --rm flutter sh -c "flutter build apk --debug && mkdir -p dist && cp build/app/outputs/flutter-apk/app-debug.apk dist/"
 ```
 
 No Git Bash do Windows, prefixe com `MSYS_NO_PATHCONV=1` e use `-T` fora de terminal interativo.
+`build/` e `.dart_tool/` ficam em volumes Docker (não na pasta do Windows); o APK é copiado para `dist/`.
 O app não executa no container (GPS, serviço em primeiro plano); validar em aparelho Android.
 
 ## Workflow

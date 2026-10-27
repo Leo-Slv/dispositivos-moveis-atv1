@@ -32,3 +32,6 @@ ios/Flutter/Generated.xcconfig
 # Sistema
 .DS_Store
 Thumbs.db
+
+# APK extraido do container
+dist/

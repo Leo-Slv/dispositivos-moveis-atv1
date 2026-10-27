@@ -28,8 +28,14 @@ docker compose run --rm flutter flutter test
 docker compose run --rm flutter flutter build apk --debug
 ```
 
-O APK gerado fica em `build/app/outputs/flutter-apk/app-debug.apk`; instale-o
-no aparelho (cabo USB + `adb install` no host, ou copiando o arquivo).
+O `build/` fica em um volume Docker (mais rápido que a pasta do Windows). Para
+obter o APK na pasta `dist/`:
+
+```bash
+docker compose run --rm flutter sh -c "flutter build apk --debug && mkdir -p dist && cp build/app/outputs/flutter-apk/app-debug.apk dist/"
+```
+
+Instale `dist/app-debug.apk` no aparelho (cabo USB + `adb install`, ou copiando o arquivo).
 
 ## Qualidade
 

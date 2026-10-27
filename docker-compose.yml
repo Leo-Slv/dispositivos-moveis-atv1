@@ -5,6 +5,9 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      # Saídas de build fora da pasta do Windows (o bind mount é lento com elas).
+      - build-saida:/app/build
+      - dart-tool:/app/.dart_tool
       - pub-cache:/pub-cache
       - gradle-cache:/root/.gradle
     stdin_open: true
@@ -18,10 +21,14 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - build-saida:/app/build
+      - dart-tool:/app/.dart_tool
       - pub-cache:/pub-cache
       - gradle-cache:/root/.gradle
     command: sh scripts/qa.sh
 
 volumes:
+  build-saida:
+  dart-tool:
   pub-cache:
   gradle-cache:
