@@ -20,8 +20,8 @@ Arquivos: `tela_mapa.dart`, `mapa_localizacoes.dart`, `cache_mapa.dart`, `item_l
 
 ## Critérios de aceite
 
-- [ ] Estados loading, erro e vazio exibidos corretamente.
-- [ ] Marcador mais recente em vermelho; demais em outra cor.
-- [ ] Enquadramento automático e via botão.
-- [ ] Atribuição do provedor visível.
-- [ ] Cache em diretório privado do app.
+- [x] Estados loading, erro e vazio exibidos corretamente.
+- [x] Marcador mais recente em vermelho; demais em outra cor.
+- [x] Enquadramento automático e via botão.
+- [x] Atribuição do provedor visível.
+- [x] Cache em diretório privado do app (pasta preparada; gravação dos tiles confirmada só em aparelho, ver checklist manual).
