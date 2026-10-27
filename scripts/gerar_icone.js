@@ -147,4 +147,47 @@ function gravar(relativo, tamanho, opcoes) {
   console.log(`gerado ${relativo} (${tamanho}x${tamanho})`);
 }
 
+function gravarTexto(relativo, conteudo) {
+  const destino = path.join(RAIZ, relativo);
+  fs.mkdirSync(path.dirname(destino), { recursive: true });
+  fs.writeFileSync(destino, conteudo);
+  console.log(`gerado ${relativo}`);
+}
+
+const RES = 'android/app/src/main/res';
+const COR_FUNDO_ADAPTATIVO = '#00695C';
+
+// Imagem original.
 gravar('assets/icons/localizacoes.png', 1024);
+
+// Ícones legados (Android < 8), um por densidade.
+const DENSIDADES = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
+for (const [densidade, tamanho] of Object.entries(DENSIDADES)) {
+  gravar(`${RES}/mipmap-${densidade}/ic_localizacoes.png`, tamanho);
+}
+
+// Camada frontal do ícone adaptativo (108dp x 4): desenho reduzido para caber
+// na zona segura e fundo transparente.
+gravar(`${RES}/drawable-nodpi/icone_localizacoes.png`, 432, {
+  escala: 0.68,
+  comFundo: false,
+});
+
+gravarTexto(
+  `${RES}/mipmap-anydpi-v26/ic_localizacoes.xml`,
+  `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/icone_localizacoes_fundo"/>
+    <foreground android:drawable="@drawable/icone_localizacoes"/>
+</adaptive-icon>
+`,
+);
+
+gravarTexto(
+  `${RES}/values/icone_localizacoes.xml`,
+  `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="icone_localizacoes_fundo">${COR_FUNDO_ADAPTATIVO}</color>
+</resources>
+`,
+);
