@@ -11,6 +11,17 @@ services:
     tty: true
     command: bash
 
+  # Format (checagem), analyze e testes: docker compose run --rm qa
+  qa:
+    build: .
+    image: atv1-flutter
+    working_dir: /app
+    volumes:
+      - .:/app
+      - pub-cache:/pub-cache
+      - gradle-cache:/root/.gradle
+    command: sh scripts/qa.sh
+
 volumes:
   pub-cache:
   gradle-cache:
