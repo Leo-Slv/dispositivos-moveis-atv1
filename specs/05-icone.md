@@ -21,6 +21,6 @@
 
 ## Critérios de aceite
 
-- [ ] Nenhum ícone padrão do Flutter restante.
-- [ ] Todas as densidades presentes.
-- [ ] Ícone adaptativo renderiza corretamente.
+- [x] Nenhum ícone padrão do Flutter restante.
+- [x] Todas as densidades presentes.
+- [ ] Ícone adaptativo renderiza corretamente (recursos validados por teste; aparência só em aparelho, ver checklist manual).
