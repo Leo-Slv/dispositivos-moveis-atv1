@@ -14,6 +14,9 @@ class RepositorioFalso implements RepositorioLocalizacoes {
   int exclusoes = 0;
   int? limiteRecebido;
 
+  /// Chamado no início de cada consulta (útil para registrar a ordem).
+  void Function()? aoConsultar;
+
   Object? erroConsulta;
   Object? erroExclusao;
 
@@ -32,6 +35,7 @@ class RepositorioFalso implements RepositorioLocalizacoes {
   }) async {
     consultas++;
     limiteRecebido = limite;
+    aoConsultar?.call();
     await bloqueioConsulta?.future;
     final erro = erroConsulta;
     if (erro != null) throw erro;
