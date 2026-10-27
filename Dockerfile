@@ -7,4 +7,8 @@ WORKDIR /app
 RUN git config --global --add safe.directory '*' \
     && git config --global --add safe.directory /sdks/flutter
 
+# Componentes do Android SDK exigidos pelo build (embutidos na imagem para não
+# serem baixados a cada execução).
+RUN sdkmanager "platforms;android-35" "ndk;28.2.13676358" "cmake;3.22.1"
+
 ENV PUB_CACHE=/pub-cache
