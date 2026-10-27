@@ -25,7 +25,6 @@ docker compose run --rm flutter flutter pub get
 docker compose run --rm flutter dart format .
 docker compose run --rm flutter flutter analyze
 docker compose run --rm flutter flutter test
-docker compose run --rm flutter flutter build apk --debug
 ```
 
 O `build/` fica em um volume Docker (mais rápido que a pasta do Windows). Para

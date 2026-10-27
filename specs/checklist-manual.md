@@ -32,6 +32,6 @@ real, anotando data e modelo.
 
 ## Spec 06 - Entrega
 
-- [ ] Criar o repositório remoto (GitHub) e enviar o código (`git remote add` e `git push`).
-- [ ] Confirmar que o CI (GitHub Actions) passa.
+- [x] Criar o repositório remoto (GitHub) e enviar o código (https://github.com/Leo-Slv/dispositivos-moveis-atv1).
+- [x] Confirmar que o CI (GitHub Actions) passa (run 40525152463, 27/10/2026).
 - [ ] Enviar o link do repositório ao professor pelo Teams até 02/11/2026.
