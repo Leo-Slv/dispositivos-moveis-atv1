@@ -18,9 +18,9 @@ Arquivos: `tela_localizacoes.dart`, `item_localizacao.dart`, `repositorio_locali
 
 ## Critérios de aceite
 
-- [ ] Ordem decrescente por instante, limite de 100 aplicado na consulta.
-- [ ] Formatação numérica conforme especificado.
-- [ ] Atualizar não interfere na coleta em andamento.
-- [ ] Diálogo de confirmação com aviso de permanência e aviso de coleta ativa.
-- [ ] Verificar `mounted` antes de atualizar a UI após operações assíncronas.
-- [ ] Sem SQL na tela; a UI usa objetos `Localizacao`.
+- [x] Ordem decrescente por instante, limite de 100 aplicado na consulta.
+- [x] Formatação numérica conforme especificado.
+- [x] Atualizar não interfere na coleta em andamento.
+- [x] Diálogo de confirmação com aviso de permanência e aviso de coleta ativa.
+- [x] Verificar `mounted` antes de atualizar a UI após operações assíncronas.
+- [x] Sem SQL na tela; a UI usa objetos `Localizacao`.
