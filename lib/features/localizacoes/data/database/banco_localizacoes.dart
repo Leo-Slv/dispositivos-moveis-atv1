@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 class BancoLocalizacoes {
   /// [abridor] permite substituir a abertura do banco (usado nos testes).
   BancoLocalizacoes({Future<Database> Function()? abridor})
+    // ignore: prefer_initializing_formals
     : _abridor = abridor;
 
   static const nomeArquivo = 'localizacoes.db';
