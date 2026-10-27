@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'fakes/cache_mapa_falso.dart';
 import 'fakes/repositorio_falso.dart';
 
 class ServicoFalso implements ServicoLocalizacao {
@@ -61,7 +62,11 @@ void main() {
   Future<void> abrirTela(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: TelaColeta(servico: servico, repositorio: repositorio),
+        home: TelaColeta(
+          servico: servico,
+          repositorio: repositorio,
+          cacheMapa: CacheMapaFalso(),
+        ),
       ),
     );
   }
@@ -240,6 +245,33 @@ void main() {
       expect(habilitado(tester, 'Parar coleta'), isTrue);
     },
   );
+
+  testWidgets('Ver mapa abre a tela do mapa', (tester) async {
+    await abrirTela(tester);
+
+    await tester.tap(botao('Ver mapa'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mapa'), findsOneWidget);
+  });
+
+  testWidgets('coleta segue ativa ao abrir o mapa e voltar', (tester) async {
+    await abrirTela(tester);
+    await tester.tap(botao('Iniciar coleta'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(botao('Ver mapa'));
+    await tester.pumpAndSettle();
+    expect(servico.controlador.hasListener, isTrue);
+    servico.controlador.add(_posicao(-23.4));
+    await tester.pumpAndSettle();
+    expect(repositorio.gravadas.map((l) => l.latitude), [-23.4]);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(servico.controlador.hasListener, isTrue);
+    expect(habilitado(tester, 'Parar coleta'), isTrue);
+  });
 
   testWidgets('descartar a tela cancela a assinatura', (tester) async {
     await abrirTela(tester);

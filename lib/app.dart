@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'features/localizacoes/data/repositories/repositorio_localizacoes.dart';
 import 'features/localizacoes/presentation/screens/tela_coleta.dart';
+import 'features/localizacoes/services/cache_mapa.dart';
 import 'features/localizacoes/services/servico_localizacao.dart';
 
 class App extends StatelessWidget {
-  const App({super.key, required this.servico, required this.repositorio});
+  const App({
+    super.key,
+    required this.servico,
+    required this.repositorio,
+    required this.cacheMapa,
+  });
 
   final ServicoLocalizacao servico;
   final RepositorioLocalizacoes repositorio;
+  final CacheMapa cacheMapa;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +25,11 @@ class App extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: TelaColeta(servico: servico, repositorio: repositorio),
+      home: TelaColeta(
+        servico: servico,
+        repositorio: repositorio,
+        cacheMapa: cacheMapa,
+      ),
     );
   }
 }

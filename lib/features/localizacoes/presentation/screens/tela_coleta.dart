@@ -5,18 +5,22 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../data/repositories/repositorio_localizacoes.dart';
 import '../../models/localizacao.dart';
+import '../../services/cache_mapa.dart';
 import '../../services/servico_localizacao.dart';
 import 'tela_localizacoes.dart';
+import 'tela_mapa.dart';
 
 class TelaColeta extends StatefulWidget {
   const TelaColeta({
     super.key,
     required this.servico,
     required this.repositorio,
+    required this.cacheMapa,
   });
 
   final ServicoLocalizacao servico;
   final RepositorioLocalizacoes repositorio;
+  final CacheMapa cacheMapa;
 
   @override
   State<TelaColeta> createState() => _TelaColetaState();
@@ -79,6 +83,15 @@ class _TelaColetaState extends State<TelaColeta> {
           repositorio: widget.repositorio,
           coletando: _coletando,
         ),
+      ),
+    );
+  }
+
+  Future<void> _abrirMapa() {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            TelaMapa(repositorio: widget.repositorio, cache: widget.cacheMapa),
       ),
     );
   }
@@ -207,6 +220,12 @@ class _TelaColetaState extends State<TelaColeta> {
               onPressed: _abrirHistorico,
               icon: const Icon(Icons.history),
               label: const Text('Consultar histórico'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _abrirMapa,
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Ver mapa'),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
