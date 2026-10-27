@@ -35,3 +35,18 @@ Arquivos adicionais só com responsabilidade clara; sem camadas vazias; nada con
 - Link do repositório enviado ao professor pelo Teams até 02/11/2026.
 - Nomes dos integrantes no README.
 - Avaliação em 10/11/2026 (prova individual escrita, sem consulta).
+
+## Critérios de aceite
+
+- [x] Estrutura mínima de arquivos do enunciado presente (`test/arquitetura_test.dart`).
+- [x] Sem SQL nem acesso ao sqflite em telas/widgets (`test/arquitetura_test.dart`).
+- [x] Sem `Timer.periodic` nem `workmanager` (`test/arquitetura_test.dart`).
+- [x] Sem banco remoto/backend (`test/arquitetura_test.dart`).
+- [x] Somente dependências usadas, em `dependencies` e `dev_dependencies` (`test/arquitetura_test.dart`).
+- [x] Nenhum banco com coordenadas no repositório; `*.db` ignorado (`test/arquitetura_test.dart`).
+- [x] `main.dart` sem concentrar a implementação (`test/arquitetura_test.dart`).
+- [x] Código formatado e `flutter analyze` sem problemas (`docker compose run --rm qa`, hook e CI).
+- [x] Erros de permissão, localização e banco tratados; assinaturas liberadas; `mounted` verificado (testes das specs 01, 02 e 03).
+- [x] Atribuição do provedor do mapa (teste da spec 03).
+- [x] Nomes dos integrantes no README (`test/arquitetura_test.dart`).
+- [ ] Link do repositório enviado ao professor pelo Teams até 02/11/2026 (ver checklist manual).

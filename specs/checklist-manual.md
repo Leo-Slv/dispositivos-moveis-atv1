@@ -29,3 +29,9 @@ real, anotando data e modelo.
 ## Spec 05 - Ícone
 
 - [ ] Ícone próprio aparece na tela inicial e na lista de aplicativos.
+
+## Spec 06 - Entrega
+
+- [ ] Criar o repositório remoto (GitHub) e enviar o código (`git remote add` e `git push`).
+- [ ] Confirmar que o CI (GitHub Actions) passa.
+- [ ] Enviar o link do repositório ao professor pelo Teams até 02/11/2026.
