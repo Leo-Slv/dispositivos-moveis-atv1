@@ -8,7 +8,7 @@
     <application
         android:label="atv1_localizacoes"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_localizacoes">
         <activity
             android:name=".MainActivity"
             android:exported="true"
