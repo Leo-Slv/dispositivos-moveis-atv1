@@ -50,4 +50,89 @@ void main() {
     final linhas = File('lib/main.dart').readAsLinesSync();
     expect(linhas.length, lessThan(40));
   });
+
+  test('estrutura mínima de arquivos do enunciado existe', () {
+    const base = 'lib/features/localizacoes';
+    final arquivos = [
+      'lib/main.dart',
+      'lib/app.dart',
+      '$base/models/localizacao.dart',
+      '$base/data/database/banco_localizacoes.dart',
+      '$base/data/repositories/repositorio_localizacoes.dart',
+      '$base/services/servico_localizacao.dart',
+      '$base/services/cache_mapa.dart',
+      '$base/presentation/screens/tela_coleta.dart',
+      '$base/presentation/screens/tela_localizacoes.dart',
+      '$base/presentation/screens/tela_mapa.dart',
+      '$base/presentation/widgets/item_localizacao.dart',
+      '$base/presentation/widgets/mapa_localizacoes.dart',
+      'assets/icons/localizacoes.png',
+    ];
+    for (final arquivo in arquivos) {
+      expect(File(arquivo).existsSync(), isTrue, reason: arquivo);
+    }
+  });
+
+  test('mantém apenas dependências usadas', () {
+    final secoes = _dependenciasDoPubspec();
+    final codigoLib = lib.map((f) => f.readAsStringSync()).join('\n');
+    final codigoTeste = _arquivosDart(
+      'test',
+    ).map((f) => f.readAsStringSync()).join('\n');
+
+    for (final pacote in secoes['dependencies']!) {
+      if (pacote == 'flutter') continue;
+      expect(
+        codigoLib,
+        contains('package:$pacote/'),
+        reason: 'dependência $pacote',
+      );
+    }
+    for (final pacote in secoes['dev_dependencies']!) {
+      if (pacote == 'flutter_test') continue;
+      if (pacote == 'flutter_lints') {
+        expect(
+          File('analysis_options.yaml').readAsStringSync(),
+          contains('package:flutter_lints/'),
+        );
+        continue;
+      }
+      expect(codigoTeste, contains('package:$pacote/'), reason: 'dev $pacote');
+    }
+  });
+
+  test('não há bancos com coordenadas pessoais no repositório', () {
+    final extensoes = RegExp(r'\.(db|sqlite|sqlite3)(-journal)?$');
+    for (final pasta in ['lib', 'test', 'assets', 'android/app/src']) {
+      final encontrados = Directory(pasta)
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => extensoes.hasMatch(f.path));
+      expect(encontrados, isEmpty, reason: pasta);
+    }
+    final gitignore = File('.gitignore').readAsStringSync();
+    expect(gitignore, contains('*.db'));
+  });
+
+  test('README informa os integrantes', () {
+    expect(File('README.md').readAsStringSync(), contains('## Integrantes'));
+  });
+}
+
+/// Nomes dos pacotes de `dependencies` e `dev_dependencies` do pubspec.
+Map<String, List<String>> _dependenciasDoPubspec() {
+  final secoes = <String, List<String>>{
+    'dependencies': [],
+    'dev_dependencies': [],
+  };
+  List<String>? atual;
+  for (final linha in File('pubspec.yaml').readAsLinesSync()) {
+    if (RegExp(r'^\S').hasMatch(linha)) {
+      atual = secoes[linha.replaceAll(':', '').trim()];
+    } else if (atual != null) {
+      final nome = RegExp(r'^  ([a-z_0-9]+):').firstMatch(linha)?.group(1);
+      if (nome != null) atual.add(nome);
+    }
+  }
+  return secoes;
 }
