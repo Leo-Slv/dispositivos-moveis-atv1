@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:atv1_localizacoes/features/localizacoes/services/servico_localizacao.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _res = 'android/app/src/main/res';
@@ -64,6 +65,13 @@ void main() {
   test('AndroidManifest referencia o ícone do aplicativo', () {
     final manifest = File(_manifest).readAsStringSync();
     expect(manifest, contains('android:icon="@mipmap/ic_localizacoes"'));
+  });
+
+  test('notificação da coleta usa um ícone que existe nos recursos', () {
+    const icone = ServicoLocalizacao.iconeNotificacao;
+
+    expect(icone.defType, 'drawable');
+    expect(File('$_res/drawable/${icone.name}.xml').existsSync(), isTrue);
   });
 
   test('nenhum ícone padrão do Flutter permanece', () {

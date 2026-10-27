@@ -12,6 +12,13 @@ enum SituacaoColeta {
 class ServicoLocalizacao {
   static const intervalo = Duration(seconds: 20);
 
+  /// Ícone da notificação do serviço em primeiro plano (res/drawable). Sem um
+  /// ícone válido o Android recusa o serviço e a coleta não inicia.
+  static const iconeNotificacao = AndroidResource(
+    name: 'ic_notificacao',
+    defType: 'drawable',
+  );
+
   /// Verifica o GPS e a permissão, solicitando-a quando necessário.
   Future<SituacaoColeta> verificar() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
@@ -53,6 +60,7 @@ class ServicoLocalizacao {
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'Coleta de localização ativa',
           notificationText: 'Registrando sua posição a cada 20 segundos.',
+          notificationIcon: iconeNotificacao,
           enableWakeLock: true,
           setOngoing: true,
         ),
