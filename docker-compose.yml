@@ -1,0 +1,16 @@
+services:
+  flutter:
+    build: .
+    image: atv1-flutter
+    working_dir: /app
+    volumes:
+      - .:/app
+      - pub-cache:/pub-cache
+      - gradle-cache:/root/.gradle
+    stdin_open: true
+    tty: true
+    command: bash
+
+volumes:
+  pub-cache:
+  gradle-cache:
