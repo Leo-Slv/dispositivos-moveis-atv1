@@ -99,6 +99,14 @@ void main() {
     matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
   );
 
+  /// Avança o relógio fake e deixa rodar as continuações assíncronas. O await
+  /// de cancel() retoma na zona real, que o pump sozinho não processa.
+  Future<void> avancar(WidgetTester tester, int segundos) async {
+    await tester.pump(Duration(seconds: segundos));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
+  }
+
   bool habilitado(WidgetTester tester, String texto) =>
       tester.widget<ButtonStyleButton>(botao(texto)).onPressed != null;
 
@@ -201,20 +209,23 @@ void main() {
       expect(find.textContaining(semPosicao), findsNothing);
     });
 
-    testWidgets('após 45 s sem posições, orienta a verificar o GPS', (
-      tester,
-    ) async {
-      await abrirTela(tester);
-      await tester.tap(botao('Iniciar coleta'));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'sem posição nem em precisão reduzida, orienta a verificar a localização',
+      (tester) async {
+        await abrirTela(tester);
+        await tester.tap(botao('Iniciar coleta'));
+        await tester.pumpAndSettle();
 
-      await tester.pump(const Duration(seconds: 44));
-      expect(find.textContaining(semPosicao), findsNothing);
+        // 30 s para a troca de modo e mais 45 s sem nenhuma posição.
+        await avancar(tester, 31);
+        await avancar(tester, 44);
+        expect(find.textContaining(semPosicao), findsNothing);
 
-      await tester.pump(const Duration(seconds: 2));
-      expect(find.textContaining(semPosicao), findsOneWidget);
-      expect(find.text(aguardando), findsNothing);
-    });
+        await avancar(tester, 2);
+        expect(find.textContaining(semPosicao), findsOneWidget);
+        expect(find.text(aguardando), findsNothing);
+      },
+    );
 
     testWidgets('ao receber posição, mostra a última e remove os avisos', (
       tester,
@@ -222,7 +233,9 @@ void main() {
       await abrirTela(tester);
       await tester.tap(botao('Iniciar coleta'));
       await tester.pumpAndSettle();
-      await tester.pump(const Duration(seconds: 46));
+      await avancar(tester, 31);
+      await avancar(tester, 46);
+      expect(find.textContaining(semPosicao), findsOneWidget);
 
       servico.controlador.add(_posicao(-23.1234567));
       await tester.pumpAndSettle();
@@ -257,10 +270,128 @@ void main() {
 
       await tester.tap(botao('Parar coleta'));
       await tester.pumpAndSettle();
-      await tester.pump(const Duration(seconds: 60));
+      await avancar(tester, 60);
 
       expect(find.textContaining(semPosicao), findsNothing);
       expect(find.text(aguardando), findsNothing);
+    });
+  });
+
+  group('fallback para Wi-Fi/rede', () {
+    const aviso = 'Sem sinal de GPS. Usando a localização por Wi-Fi/rede';
+
+    Future<void> iniciar(WidgetTester tester) async {
+      await abrirTela(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('começa sempre em alta precisão', (tester) async {
+      await iniciar(tester);
+
+      expect(servico.modos, [ModoPrecisao.alta]);
+      expect(find.textContaining(aviso), findsNothing);
+    });
+
+    testWidgets('antes de 30 s sem posição, continua em alta precisão', (
+      tester,
+    ) async {
+      await iniciar(tester);
+
+      await avancar(tester, 29);
+
+      expect(servico.modos, [ModoPrecisao.alta]);
+      expect(find.textContaining(aviso), findsNothing);
+    });
+
+    testWidgets('sem posição em 30 s, passa a aceitar Wi-Fi/rede e informa', (
+      tester,
+    ) async {
+      await iniciar(tester);
+
+      await avancar(tester, 31);
+
+      expect(servico.modos, [ModoPrecisao.alta, ModoPrecisao.reduzida]);
+      expect(find.textContaining(aviso), findsOneWidget);
+      expect(habilitado(tester, 'Parar coleta'), isTrue);
+      expect(habilitado(tester, 'Iniciar coleta'), isFalse);
+    });
+
+    testWidgets('após a troca há uma única assinatura ativa', (tester) async {
+      await iniciar(tester);
+
+      await avancar(tester, 31);
+
+      expect(servico.streamsAbertos, 2);
+      expect(servico.assinaturasAtivas, 1);
+      expect(servico.controladores.first.hasListener, isFalse);
+      expect(servico.controladores.last.hasListener, isTrue);
+    });
+
+    testWidgets('posições recebidas após a troca são gravadas', (tester) async {
+      await iniciar(tester);
+      await avancar(tester, 31);
+
+      servico.controlador.add(_posicao(-23.7));
+      await tester.pumpAndSettle();
+
+      expect(repositorio.gravadas.map((l) => l.latitude), [-23.7]);
+      expect(find.text('Última posição recebida'), findsOneWidget);
+    });
+
+    testWidgets('posição do GPS antes de 30 s impede a troca', (tester) async {
+      await iniciar(tester);
+
+      await avancar(tester, 10);
+      servico.controlador.add(_posicao(-23.5));
+      await avancar(tester, 60);
+
+      expect(servico.modos, [ModoPrecisao.alta]);
+      expect(servico.assinaturasAtivas, 1);
+      expect(find.textContaining(aviso), findsNothing);
+    });
+
+    testWidgets('parar durante a coleta reduzida cancela tudo', (tester) async {
+      await iniciar(tester);
+      await avancar(tester, 31);
+
+      await tester.tap(botao('Parar coleta'));
+      await tester.pumpAndSettle();
+
+      expect(servico.assinaturasAtivas, 0);
+      expect(find.textContaining(aviso), findsNothing);
+    });
+
+    testWidgets('ao iniciar de novo volta a pedir alta precisão', (
+      tester,
+    ) async {
+      await iniciar(tester);
+      await avancar(tester, 31);
+      await tester.tap(botao('Parar coleta'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      expect(servico.modos, [
+        ModoPrecisao.alta,
+        ModoPrecisao.reduzida,
+        ModoPrecisao.alta,
+      ]);
+      expect(servico.assinaturasAtivas, 1);
+      expect(find.textContaining(aviso), findsNothing);
+    });
+
+    testWidgets('parar antes dos 30 s não dispara a troca depois', (
+      tester,
+    ) async {
+      await iniciar(tester);
+      await tester.tap(botao('Parar coleta'));
+      await tester.pumpAndSettle();
+
+      await avancar(tester, 120);
+
+      expect(servico.modos, [ModoPrecisao.alta]);
     });
   });
 

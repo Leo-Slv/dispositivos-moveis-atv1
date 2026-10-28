@@ -28,13 +28,17 @@ class TelaColeta extends StatefulWidget {
 }
 
 class _TelaColetaState extends State<TelaColeta> {
-  /// Tempo sem nenhuma posição após o qual o usuário é avisado.
+  /// Sem posição do GPS por este tempo, a coleta passa a aceitar Wi-Fi/rede.
+  static const tempoParaPrecisaoReduzida = Duration(seconds: 30);
+
+  /// Sem nenhuma posição, mesmo em precisão reduzida, o usuário é avisado.
   static const tempoAlertaSemPosicao = Duration(seconds: 45);
 
   StreamSubscription<Position>? _assinatura;
   Timer? _alertaSemPosicao;
   bool _iniciando = false;
   bool _semPosicao = false;
+  bool _precisaoReduzida = false;
   int _gravadas = 0;
   Localizacao? _ultima;
 
@@ -68,17 +72,39 @@ class _TelaColetaState extends State<TelaColeta> {
 
       _ultima = null;
       _semPosicao = false;
-      _assinatura = widget.servico.posicoes().listen(
-        _aoReceber,
-        onError: _aoFalhar,
-      );
+      _precisaoReduzida = false;
+      _assinar(ModoPrecisao.alta);
       _alertaSemPosicao?.cancel();
-      _alertaSemPosicao = Timer(tempoAlertaSemPosicao, _aoExpirarAlerta);
+      _alertaSemPosicao = Timer(
+        tempoParaPrecisaoReduzida,
+        _usarPrecisaoReduzida,
+      );
     } catch (erro) {
       _mostrarMensagem('Não foi possível iniciar a coleta: $erro');
     } finally {
       if (mounted) setState(() => _iniciando = false);
     }
+  }
+
+  void _assinar(ModoPrecisao modo) {
+    _assinatura = widget.servico
+        .posicoes(modo: modo)
+        .listen(_aoReceber, onError: _aoFalhar);
+  }
+
+  /// O GPS não entregou posição a tempo (comum em ambientes fechados): troca
+  /// a assinatura, sem nunca manter duas ativas, para aceitar Wi-Fi/rede.
+  Future<void> _usarPrecisaoReduzida() async {
+    final anterior = _assinatura;
+    if (!mounted || anterior == null || _ultima != null) return;
+
+    await anterior.cancel();
+    // A coleta pode ter sido parada ou a tela descartada durante o cancelamento.
+    if (!mounted || !identical(_assinatura, anterior)) return;
+
+    _assinar(ModoPrecisao.reduzida);
+    _alertaSemPosicao = Timer(tempoAlertaSemPosicao, _aoExpirarAlerta);
+    setState(() => _precisaoReduzida = true);
   }
 
   Future<void> _parar() async {
@@ -88,6 +114,7 @@ class _TelaColetaState extends State<TelaColeta> {
     setState(() {
       _assinatura = null;
       _semPosicao = false;
+      _precisaoReduzida = false;
     });
     await assinatura.cancel();
   }
@@ -238,8 +265,9 @@ class _TelaColetaState extends State<TelaColeta> {
         child: const Padding(
           padding: EdgeInsets.all(16),
           child: Text(
-            'Nenhuma posição recebida ainda. Verifique se o GPS está ligado '
-            'em alta precisão e vá para um local aberto, com visão do céu.',
+            'Nenhuma posição recebida ainda, nem por GPS nem por Wi-Fi/rede. '
+            'Verifique se a localização está ligada e se o app tem a '
+            'permissão de localização precisa.',
           ),
         ),
       );
@@ -272,6 +300,19 @@ class _TelaColetaState extends State<TelaColeta> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
+            if (coletando && _precisaoReduzida) ...[
+              Card(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                child: const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Sem sinal de GPS. Usando a localização por Wi-Fi/rede, '
+                    'com precisão menor.',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             _painelUltimaPosicao(context),
             const SizedBox(height: 12),
             FilledButton.icon(
