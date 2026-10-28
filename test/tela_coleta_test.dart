@@ -153,6 +153,95 @@ void main() {
     expect(repositorio.gravadas.first.instante.isUtc, isTrue);
   });
 
+  group('diagnóstico da coleta', () {
+    const aguardando = 'Aguardando a primeira posição...';
+    const semPosicao = 'Nenhuma posição recebida ainda';
+
+    testWidgets('sem coleta ativa não mostra aviso nem posição', (
+      tester,
+    ) async {
+      await abrirTela(tester);
+
+      expect(find.text(aguardando), findsNothing);
+      expect(find.textContaining(semPosicao), findsNothing);
+      expect(find.textContaining('Última posição'), findsNothing);
+    });
+
+    testWidgets('enquanto nenhuma posição chega, informa que aguarda', (
+      tester,
+    ) async {
+      await abrirTela(tester);
+
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(aguardando), findsOneWidget);
+      expect(find.textContaining(semPosicao), findsNothing);
+    });
+
+    testWidgets('após 45 s sem posições, orienta a verificar o GPS', (
+      tester,
+    ) async {
+      await abrirTela(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      await tester.pump(const Duration(seconds: 44));
+      expect(find.textContaining(semPosicao), findsNothing);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.textContaining(semPosicao), findsOneWidget);
+      expect(find.text(aguardando), findsNothing);
+    });
+
+    testWidgets('ao receber posição, mostra a última e remove os avisos', (
+      tester,
+    ) async {
+      await abrirTela(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 46));
+
+      servico.controlador.add(_posicao(-23.1234567));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Última posição recebida'), findsOneWidget);
+      expect(find.textContaining('-23.123457'), findsOneWidget);
+      expect(find.textContaining('7.5 m'), findsOneWidget);
+      expect(find.text(aguardando), findsNothing);
+      expect(find.textContaining(semPosicao), findsNothing);
+    });
+
+    testWidgets('a última posição é atualizada a cada nova leitura', (
+      tester,
+    ) async {
+      await abrirTela(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      servico.controlador.add(_posicao(-23.1));
+      await tester.pumpAndSettle();
+      servico.controlador.add(_posicao(-23.2));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('-23.200000'), findsOneWidget);
+      expect(find.textContaining('-23.100000'), findsNothing);
+    });
+
+    testWidgets('parar cancela o aviso de falta de posições', (tester) async {
+      await abrirTela(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(botao('Parar coleta'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 60));
+
+      expect(find.textContaining(semPosicao), findsNothing);
+      expect(find.text(aguardando), findsNothing);
+    });
+  });
+
   testWidgets('GPS desligado orienta o usuário e não inicia a coleta', (
     tester,
   ) async {

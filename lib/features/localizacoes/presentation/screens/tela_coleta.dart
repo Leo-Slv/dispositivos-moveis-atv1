@@ -7,6 +7,7 @@ import '../../data/repositories/repositorio_localizacoes.dart';
 import '../../models/localizacao.dart';
 import '../../services/cache_mapa.dart';
 import '../../services/servico_localizacao.dart';
+import '../widgets/item_localizacao.dart';
 import 'tela_localizacoes.dart';
 import 'tela_mapa.dart';
 
@@ -27,9 +28,15 @@ class TelaColeta extends StatefulWidget {
 }
 
 class _TelaColetaState extends State<TelaColeta> {
+  /// Tempo sem nenhuma posição após o qual o usuário é avisado.
+  static const tempoAlertaSemPosicao = Duration(seconds: 45);
+
   StreamSubscription<Position>? _assinatura;
+  Timer? _alertaSemPosicao;
   bool _iniciando = false;
+  bool _semPosicao = false;
   int _gravadas = 0;
+  Localizacao? _ultima;
 
   // Serializa as gravações para que nunca se sobreponham.
   Future<void> _fila = Future<void>.value();
@@ -38,6 +45,7 @@ class _TelaColetaState extends State<TelaColeta> {
 
   @override
   void dispose() {
+    _alertaSemPosicao?.cancel();
     _assinatura?.cancel();
     super.dispose();
   }
@@ -58,10 +66,14 @@ class _TelaColetaState extends State<TelaColeta> {
       await widget.servico.solicitarPermissaoNotificacao();
       if (!mounted) return;
 
+      _ultima = null;
+      _semPosicao = false;
       _assinatura = widget.servico.posicoes().listen(
         _aoReceber,
         onError: _aoFalhar,
       );
+      _alertaSemPosicao?.cancel();
+      _alertaSemPosicao = Timer(tempoAlertaSemPosicao, _aoExpirarAlerta);
     } catch (erro) {
       _mostrarMensagem('Não foi possível iniciar a coleta: $erro');
     } finally {
@@ -72,8 +84,18 @@ class _TelaColetaState extends State<TelaColeta> {
   Future<void> _parar() async {
     final assinatura = _assinatura;
     if (assinatura == null) return;
-    setState(() => _assinatura = null);
+    _alertaSemPosicao?.cancel();
+    setState(() {
+      _assinatura = null;
+      _semPosicao = false;
+    });
     await assinatura.cancel();
+  }
+
+  void _aoExpirarAlerta() {
+    if (mounted && _coletando && _ultima == null) {
+      setState(() => _semPosicao = true);
+    }
   }
 
   Future<void> _abrirHistorico() {
@@ -103,6 +125,14 @@ class _TelaColetaState extends State<TelaColeta> {
       precisao: posicao.accuracy,
       instante: posicao.timestamp.toUtc(),
     );
+
+    _alertaSemPosicao?.cancel();
+    if (mounted) {
+      setState(() {
+        _ultima = localizacao;
+        _semPosicao = false;
+      });
+    }
 
     _fila = _fila.then((_) async {
       try {
@@ -182,6 +212,45 @@ class _TelaColetaState extends State<TelaColeta> {
       ..showSnackBar(SnackBar(content: Text(texto)));
   }
 
+  /// Mostra a última posição recebida, ou o que se espera enquanto não chega.
+  Widget _painelUltimaPosicao(BuildContext context) {
+    final ultima = _ultima;
+    if (ultima != null) {
+      return Card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Text('Última posição recebida'),
+            ),
+            ItemLocalizacao(localizacao: ultima),
+          ],
+        ),
+      );
+    }
+
+    if (!_coletando) return const SizedBox.shrink();
+
+    if (_semPosicao) {
+      return Card(
+        color: Theme.of(context).colorScheme.errorContainer,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'Nenhuma posição recebida ainda. Verifique se o GPS está ligado '
+            'em alta precisão e vá para um local aberto, com visão do céu.',
+          ),
+        ),
+      );
+    }
+
+    return const Text(
+      'Aguardando a primeira posição...',
+      textAlign: TextAlign.center,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final coletando = _coletando;
@@ -190,8 +259,7 @@ class _TelaColetaState extends State<TelaColeta> {
       appBar: AppBar(title: const Text('Coleta de localização')),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
           children: [
             Text(
               coletando ? 'Coleta ativa' : 'Coleta parada',
@@ -203,7 +271,9 @@ class _TelaColetaState extends State<TelaColeta> {
               'Posições gravadas nesta sessão: $_gravadas',
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+            _painelUltimaPosicao(context),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: coletando || _iniciando ? null : _iniciar,
               icon: const Icon(Icons.play_arrow),
