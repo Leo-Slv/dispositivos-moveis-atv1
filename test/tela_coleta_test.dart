@@ -11,11 +11,21 @@ import 'fakes/repositorio_falso.dart';
 
 class ServicoFalso implements ServicoLocalizacao {
   SituacaoColeta situacao = SituacaoColeta.pronta;
-  int streamsAbertos = 0;
   int aberturasConfigApp = 0;
   int aberturasConfigLocalizacao = 0;
-  // ignore: close_sinks
-  final controlador = StreamController<Position>(sync: true);
+
+  /// Um controlador por chamada de posicoes(), na ordem em que foram pedidos.
+  final controladores = <StreamController<Position>>[];
+
+  /// Modo de precisão pedido em cada chamada de posicoes().
+  final modos = <ModoPrecisao>[];
+
+  /// Controlador da assinatura mais recente.
+  StreamController<Position> get controlador => controladores.last;
+
+  int get streamsAbertos => controladores.length;
+
+  int get assinaturasAtivas => controladores.where((c) => c.hasListener).length;
 
   @override
   Future<SituacaoColeta> verificar() async => situacao;
@@ -24,10 +34,16 @@ class ServicoFalso implements ServicoLocalizacao {
   Future<void> solicitarPermissaoNotificacao() async {}
 
   @override
-  Stream<Position> posicoes() {
-    streamsAbertos++;
+  Stream<Position> posicoes({ModoPrecisao modo = ModoPrecisao.alta}) {
+    modos.add(modo);
+    final controlador = StreamController<Position>(sync: true);
+    controladores.add(controlador);
     return controlador.stream;
   }
+
+  @override
+  LocationSettings configuracao(ModoPrecisao modo) =>
+      throw UnimplementedError();
 
   @override
   Future<bool> abrirConfiguracoesApp() async {
@@ -39,6 +55,13 @@ class ServicoFalso implements ServicoLocalizacao {
   Future<bool> abrirConfiguracoesLocalizacao() async {
     aberturasConfigLocalizacao++;
     return true;
+  }
+
+  // Sem await: close() só completa quando há ouvinte, e alguns testes não têm.
+  void fechar() {
+    for (final controlador in controladores) {
+      unawaited(controlador.close());
+    }
   }
 }
 
@@ -84,8 +107,7 @@ void main() {
     repositorio = RepositorioFalso();
   });
 
-  // Sem await: close() só completa quando há ouvinte, e alguns testes não têm.
-  tearDown(() => unawaited(servico.controlador.close()));
+  tearDown(() => servico.fechar());
 
   testWidgets('estado inicial: Iniciar habilitado e Parar desabilitado', (
     tester,

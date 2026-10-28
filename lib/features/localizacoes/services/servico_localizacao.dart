@@ -9,6 +9,10 @@ enum SituacaoColeta {
   permissaoNegadaPermanente,
 }
 
+/// Fonte de localização solicitada. A reduzida serve de alternativa quando o
+/// GPS não entrega posições (por exemplo, em ambientes fechados).
+enum ModoPrecisao { alta, reduzida }
+
 class ServicoLocalizacao {
   static const intervalo = Duration(seconds: 20);
 
@@ -49,26 +53,39 @@ class ServicoLocalizacao {
     await ph.Permission.notification.request();
   }
 
-  /// Stream de posições com alta precisão e intervalo solicitado de 20 s.
+  /// Stream de posições com intervalo solicitado de 20 s. Por padrão usa alta
+  /// precisão (GPS); [ModoPrecisao.reduzida] aceita Wi-Fi/rede móvel.
   /// No Android, mantém um serviço em primeiro plano com notificação.
-  Stream<Position> posicoes() {
-    final LocationSettings configuracao;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      configuracao = AndroidSettings(
-        accuracy: LocationAccuracy.high,
-        intervalDuration: intervalo,
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: 'Coleta de localização ativa',
-          notificationText: 'Registrando sua posição a cada 20 segundos.',
-          notificationIcon: iconeNotificacao,
-          enableWakeLock: true,
-          setOngoing: true,
-        ),
-      );
-    } else {
-      configuracao = const LocationSettings(accuracy: LocationAccuracy.high);
+  Stream<Position> posicoes({ModoPrecisao modo = ModoPrecisao.alta}) {
+    return Geolocator.getPositionStream(locationSettings: configuracao(modo));
+  }
+
+  /// Configuração do stream de posições para o [modo] informado.
+  LocationSettings configuracao(ModoPrecisao modo) {
+    final precisao = switch (modo) {
+      ModoPrecisao.alta => LocationAccuracy.high,
+      ModoPrecisao.reduzida => LocationAccuracy.medium,
+    };
+
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return LocationSettings(accuracy: precisao);
     }
-    return Geolocator.getPositionStream(locationSettings: configuracao);
+
+    return AndroidSettings(
+      accuracy: precisao,
+      intervalDuration: intervalo,
+      foregroundNotificationConfig: ForegroundNotificationConfig(
+        notificationTitle: 'Coleta de localização ativa',
+        notificationText: switch (modo) {
+          ModoPrecisao.alta => 'Registrando sua posição a cada 20 segundos.',
+          ModoPrecisao.reduzida =>
+            'Registrando por Wi-Fi/rede (sem sinal de GPS).',
+        },
+        notificationIcon: iconeNotificacao,
+        enableWakeLock: true,
+        setOngoing: true,
+      ),
+    );
   }
 
   Future<bool> abrirConfiguracoesApp() => Geolocator.openAppSettings();
