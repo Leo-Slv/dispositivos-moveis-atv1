@@ -8,6 +8,8 @@ real, anotando data e modelo.
 - [ ] Coleta segue ativa com o app minimizado.
 - [ ] Notificação visível enquanto a coleta está ativa (Android 13+: permissão de notificações concedida).
 - [ ] Posições são gravadas aproximadamente a cada 20 s.
+- [ ] Dentro de um prédio, sem GPS: após ~30 s aparece o aviso de Wi-Fi/rede e chegam posições (precisão menor).
+- [ ] Ao ar livre, as posições chegam em alta precisão, sem o aviso de Wi-Fi/rede.
 - [ ] Coleta continua ao navegar para histórico e mapa.
 - [ ] Diálogo de GPS desligado/permissão negada aparece no aparelho e leva às configurações certas.
 
