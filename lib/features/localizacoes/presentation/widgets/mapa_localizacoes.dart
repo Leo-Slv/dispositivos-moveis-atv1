@@ -17,7 +17,7 @@ class MapaLocalizacoes extends StatelessWidget {
 
   static const urlTiles = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const pacote = 'br.edu.atv1_localizacoes';
-  static const atribuicao = '© OpenStreetMap contributors';
+  static const atribuicao = 'OpenStreetMap contributors';
   static const zoomPontoUnico = 16.0;
   static const _margem = EdgeInsets.all(56);
 
@@ -93,9 +93,9 @@ class MapaLocalizacoes extends StatelessWidget {
           tileProvider: tileProvider,
         ),
         MarkerLayer(markers: marcadores),
-        const RichAttributionWidget(
-          attributions: [TextSourceAttribution(atribuicao)],
-        ),
+        // Sempre visível (exigência de uso dos tiles do OpenStreetMap):
+        // mostra '© OpenStreetMap contributors' sem precisar tocar em nada.
+        const SimpleAttributionWidget(source: Text(atribuicao)),
       ],
     );
   }

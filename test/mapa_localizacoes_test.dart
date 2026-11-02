@@ -57,10 +57,19 @@ void main() {
     );
   });
 
-  testWidgets('exibe a atribuição do provedor do mapa', (tester) async {
+  testWidgets('a atribuição do provedor fica sempre visível, sem tocar', (
+    tester,
+  ) async {
     await abrir(tester, tres);
 
-    expect(find.textContaining('OpenStreetMap'), findsOneWidget);
+    // hitTestable: o texto está na tela e não escondido atrás de um ícone.
+    final atribuicao = find.textContaining('OpenStreetMap').hitTestable();
+    expect(atribuicao, findsOneWidget);
+
+    final tela = tester.view.physicalSize / tester.view.devicePixelRatio;
+    final caixa = tester.getRect(atribuicao);
+    expect(caixa.right, lessThanOrEqualTo(tela.width));
+    expect(caixa.bottom, lessThanOrEqualTo(tela.height));
   });
 
   testWidgets('cria um marcador por localização', (tester) async {

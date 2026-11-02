@@ -68,7 +68,7 @@ APK de release; **manual** = precisa de aparelho; **usuário** = ação de quem 
 - [x] R42 Enquadra os pontos ao carregar (`mapa_localizacoes_test`, `tela_mapa_test`).
 - [x] R43 Botão para enquadrar todos os pontos novamente (`tela_mapa_test`).
 - [x] R44 Botão para atualizar os registros (`tela_mapa_test`).
-- [ ] R45 Atribuição do provedor sempre visível, sem precisar tocar (hoje fica escondida atrás de um ícone).
+- [x] R45 Atribuição do provedor sempre visível, sem precisar tocar (`mapa_localizacoes_test`: teste falhava com o widget antigo, que a escondia atrás de um ícone).
 - [ ] R45b Mapa e cache funcionando no aparelho, com internet (manual).
 
 ## F. Persistência local (item 4)
