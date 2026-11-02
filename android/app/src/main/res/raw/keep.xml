@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Recursos acessados só por nome em tempo de execução (getIdentifier), que o
+     encolhedor de recursos do build de release removeria por não achar uma
+     referência estática. Sem o ícone da notificação, o serviço de coleta em
+     primeiro plano falha e a coleta fica muda. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notificacao" />

@@ -74,6 +74,15 @@ void main() {
     expect(File('$_res/drawable/${icone.name}.xml').existsSync(), isTrue);
   });
 
+  // O plugin procura o ícone por nome (getIdentifier); sem esta regra o
+  // encolhedor de recursos do release o remove e a coleta não inicia.
+  test('o ícone da notificação é preservado no build de release', () {
+    const icone = ServicoLocalizacao.iconeNotificacao;
+    final regra = File('$_res/raw/keep.xml').readAsStringSync();
+
+    expect(regra, contains('tools:keep="@${icone.defType}/${icone.name}"'));
+  });
+
   test('nenhum ícone padrão do Flutter permanece', () {
     expect(File(_manifest).readAsStringSync(), isNot(contains('ic_launcher')));
 
