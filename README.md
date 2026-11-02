@@ -2,7 +2,7 @@
 
 Programação para Dispositivos Móveis I - Prof. Arley
 
-Aplicativo Flutter (Android) que coleta a localização do aparelho continuamente
+Aplicativo Flutter (Android, com adaptação para iOS) que coleta a localização do aparelho continuamente
 por meio de um stream de posições, grava em SQLite e exibe o histórico em lista
 e em um mapa interativo.
 
@@ -60,7 +60,9 @@ docker compose run --rm flutter sh -c "flutter build apk --release && mkdir -p d
 Copie `dist/app-release.apk` para o aparelho (ou use `adb install`), permita a
 instalação de fontes desconhecidas, abra o app e aceite as permissões de
 localização e de notificações. O mapa precisa de internet. O app não executa no
-container; a coleta precisa ser validada em um aparelho Android.
+container; a coleta precisa ser validada em um aparelho Android. A adaptação do iOS
+(permissões, segundo plano e ícone) está no projeto, mas não foi testada em um
+aparelho iOS.
 
 ## Qualidade
 

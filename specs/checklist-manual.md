@@ -32,6 +32,10 @@ real, anotando data e modelo.
 
 - [ ] Ícone próprio aparece na tela inicial e na lista de aplicativos.
 
+## iOS (opcional)
+
+- [ ] O app compila e a coleta funciona em um iOS real (permissão de localização, segundo plano, ícone).
+
 ## Spec 06 - Entrega
 
 - [x] Criar o repositório remoto (GitHub) e enviar o código (https://github.com/Leo-Slv/dispositivos-moveis-atv1).

@@ -106,5 +106,6 @@ APK de release; **manual** = precisa de aparelho; **usuário** = ação de quem 
 
 ## I. Plataforma
 
-- [x] R68 Plataforma escolhida: Android (README).
-- [ ] R69 iOS: adaptar permissões, segundo plano e ícone, já que o enunciado cita Android/iOS (hoje o iOS não tem as chaves de localização no `Info.plist` e mantém o ícone padrão do Flutter).
+- [x] R68 Plataforma principal: Android, onde o app foi construído e será validado (README).
+- [x] R69 iOS adaptado: chaves de localização e modo `location` em segundo plano no `Info.plist`, configuração Apple no serviço e ícone próprio sem canal alfa (`ios_test`).
+- [ ] R69b O app compila e funciona em um iOS real (manual: não há Mac neste ambiente, então a adaptação do iOS não foi executada).
