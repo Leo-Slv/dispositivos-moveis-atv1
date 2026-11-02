@@ -77,7 +77,7 @@ APK de release; **manual** = precisa de aparelho; **usuário** = ação de quem 
 - [x] R47 Colunas e tipos: id INTEGER PK AUTOINCREMENT; latitude, longitude, precisao REAL; instante TEXT, todas obrigatórias (`repositorio_localizacoes_test`).
 - [x] R48 Instante gravado em UTC, ISO 8601, e exibido em horário local (`localizacao_test`, `item_localizacao_test`).
 - [x] R49 Dados permanecem após fechar e reabrir o banco (`persistencia_arquivo_test`).
-- [ ] R49b Ao reabrir o app, a tela inicial mostra os dados já salvos (hoje só mostra a sessão atual; o histórico já mostra).
+- [x] R49b Ao reabrir o app, a tela inicial mostra o total e a última posição já salvos no banco (`tela_coleta_test`: grupo "dados salvos").
 - [ ] R49c Dados permanecem após fechar e reabrir o app no aparelho (manual).
 - [x] R50 Limite de 100 só na consulta, sem excluir registros antigos (`persistencia_arquivo_test`).
 - [x] R51 Limpeza remove todas as linhas, preservando a tabela e o arquivo do banco (`persistencia_arquivo_test`).

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:atv1_localizacoes/features/localizacoes/models/localizacao.dart';
 import 'package:atv1_localizacoes/features/localizacoes/presentation/screens/tela_coleta.dart';
 import 'package:atv1_localizacoes/features/localizacoes/services/servico_localizacao.dart';
 import 'package:flutter/material.dart';
@@ -274,6 +275,133 @@ void main() {
 
       expect(find.textContaining(semPosicao), findsNothing);
       expect(find.text(aguardando), findsNothing);
+    });
+  });
+
+  group('dados salvos (persistência)', () {
+    Localizacao salva(int minuto, double lat) => Localizacao(
+      id: minuto,
+      latitude: lat,
+      longitude: -46.6,
+      precisao: 4,
+      instante: DateTime.utc(2026, 11, 2, 9, minuto),
+    );
+
+    // Mais recente primeiro, como a consulta do repositório devolve.
+    void comTresSalvos() => repositorio = RepositorioFalso([
+      salva(3, -23.3),
+      salva(2, -23.2),
+      salva(1, -23.1),
+    ]);
+
+    Future<void> abrirEEsperar(WidgetTester tester) async {
+      await abrirTela(tester);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ao abrir, mostra o total e a última posição já salvos', (
+      tester,
+    ) async {
+      comTresSalvos();
+
+      await abrirEEsperar(tester);
+
+      expect(find.text('Registros salvos: 3'), findsOneWidget);
+      expect(find.text('Gravados nesta sessão: 0'), findsOneWidget);
+      expect(find.text('Última posição salva'), findsOneWidget);
+      expect(find.textContaining('-23.300000'), findsOneWidget);
+    });
+
+    testWidgets('sem registros salvos, mostra zero e nenhuma posição', (
+      tester,
+    ) async {
+      await abrirEEsperar(tester);
+
+      expect(find.text('Registros salvos: 0'), findsOneWidget);
+      expect(find.text('Última posição salva'), findsNothing);
+    });
+
+    testWidgets('reabrir a tela mostra o que foi coletado antes', (
+      tester,
+    ) async {
+      await abrirEEsperar(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+      servico.controlador.add(_posicao(-23.45));
+      await tester.pumpAndSettle();
+
+      // Fecha o app (descarta a tela) e abre de novo sobre o mesmo banco.
+      await tester.pumpWidget(const SizedBox());
+      await abrirEEsperar(tester);
+
+      expect(find.text('Registros salvos: 1'), findsOneWidget);
+      expect(find.text('Gravados nesta sessão: 0'), findsOneWidget);
+      expect(find.text('Última posição salva'), findsOneWidget);
+      expect(find.textContaining('-23.450000'), findsOneWidget);
+    });
+
+    testWidgets('cada posição gravada atualiza o total salvo', (tester) async {
+      comTresSalvos();
+      await abrirEEsperar(tester);
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      servico.controlador.add(_posicao(-23.9));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Registros salvos: 4'), findsOneWidget);
+      expect(find.text('Gravados nesta sessão: 1'), findsOneWidget);
+    });
+
+    testWidgets('durante a coleta não mostra a posição salva antiga', (
+      tester,
+    ) async {
+      comTresSalvos();
+      await abrirEEsperar(tester);
+
+      await tester.tap(botao('Iniciar coleta'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Última posição salva'), findsNothing);
+      expect(find.text('Aguardando a primeira posição...'), findsOneWidget);
+      expect(find.text('Registros salvos: 3'), findsOneWidget);
+    });
+
+    testWidgets('ao voltar do histórico limpo, o total volta a zero', (
+      tester,
+    ) async {
+      comTresSalvos();
+      await abrirEEsperar(tester);
+
+      await tester.tap(botao('Consultar histórico'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Limpar histórico'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Limpar histórico'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Registros salvos: 0'), findsOneWidget);
+      expect(find.text('Última posição salva'), findsNothing);
+    });
+
+    testWidgets('falha ao ler os dados salvos mostra mensagem de erro', (
+      tester,
+    ) async {
+      repositorio.erroConsulta = StateError('banco indisponível');
+
+      await abrirEEsperar(tester);
+
+      expect(
+        find.textContaining('Não foi possível ler os dados salvos'),
+        findsOneWidget,
+      );
     });
   });
 

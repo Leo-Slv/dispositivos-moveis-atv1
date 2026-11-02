@@ -42,10 +42,36 @@ class _TelaColetaState extends State<TelaColeta> {
   int _gravadas = 0;
   Localizacao? _ultima;
 
+  // Resumo do que já está salvo no banco (sobrevive a fechar e reabrir o app).
+  int _totalSalvo = 0;
+  Localizacao? _ultimaSalva;
+
   // Serializa as gravações para que nunca se sobreponham.
   Future<void> _fila = Future<void>.value();
 
   bool get _coletando => _assinatura != null;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_carregarResumo());
+  }
+
+  /// Lê do banco o total salvo e a última posição, para a tela refletir os
+  /// dados persistidos e não só os da sessão atual.
+  Future<void> _carregarResumo() async {
+    try {
+      final total = await widget.repositorio.contar();
+      final recentes = await widget.repositorio.consultarRecentes(limite: 1);
+      if (!mounted) return;
+      setState(() {
+        _totalSalvo = total;
+        _ultimaSalva = recentes.isEmpty ? null : recentes.first;
+      });
+    } catch (erro) {
+      _mostrarMensagem('Não foi possível ler os dados salvos: $erro');
+    }
+  }
 
   @override
   void dispose() {
@@ -125,8 +151,8 @@ class _TelaColetaState extends State<TelaColeta> {
     }
   }
 
-  Future<void> _abrirHistorico() {
-    return Navigator.of(context).push(
+  Future<void> _abrirHistorico() async {
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => TelaLocalizacoes(
           repositorio: widget.repositorio,
@@ -134,6 +160,8 @@ class _TelaColetaState extends State<TelaColeta> {
         ),
       ),
     );
+    // O histórico pode ter sido limpo.
+    if (mounted) await _carregarResumo();
   }
 
   Future<void> _abrirMapa() {
@@ -164,7 +192,13 @@ class _TelaColetaState extends State<TelaColeta> {
     _fila = _fila.then((_) async {
       try {
         await widget.repositorio.inserir(localizacao);
-        if (mounted) setState(() => _gravadas++);
+        if (mounted) {
+          setState(() {
+            _gravadas++;
+            _totalSalvo++;
+            _ultimaSalva = localizacao;
+          });
+        }
       } catch (erro) {
         _mostrarMensagem('Falha ao gravar a localização: $erro');
       }
@@ -239,25 +273,34 @@ class _TelaColetaState extends State<TelaColeta> {
       ..showSnackBar(SnackBar(content: Text(texto)));
   }
 
+  Widget _cartaoPosicao(String titulo, Localizacao localizacao) {
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(titulo),
+          ),
+          ItemLocalizacao(localizacao: localizacao),
+        ],
+      ),
+    );
+  }
+
   /// Mostra a última posição recebida, ou o que se espera enquanto não chega.
   Widget _painelUltimaPosicao(BuildContext context) {
     final ultima = _ultima;
     if (ultima != null) {
-      return Card(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Text('Última posição recebida'),
-            ),
-            ItemLocalizacao(localizacao: ultima),
-          ],
-        ),
-      );
+      return _cartaoPosicao('Última posição recebida', ultima);
     }
 
-    if (!_coletando) return const SizedBox.shrink();
+    if (!_coletando) {
+      final salva = _ultimaSalva;
+      return salva == null
+          ? const SizedBox.shrink()
+          : _cartaoPosicao('Última posição salva', salva);
+    }
 
     if (_semPosicao) {
       return Card(
@@ -295,8 +338,9 @@ class _TelaColetaState extends State<TelaColeta> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
+            Text('Registros salvos: $_totalSalvo', textAlign: TextAlign.center),
             Text(
-              'Posições gravadas nesta sessão: $_gravadas',
+              'Gravados nesta sessão: $_gravadas',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),

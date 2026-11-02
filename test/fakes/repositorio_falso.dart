@@ -39,7 +39,7 @@ class RepositorioFalso implements RepositorioLocalizacoes {
     await bloqueioConsulta?.future;
     final erro = erroConsulta;
     if (erro != null) throw erro;
-    return List.of(gravadas);
+    return List.of(gravadas.take(limite));
   }
 
   @override
