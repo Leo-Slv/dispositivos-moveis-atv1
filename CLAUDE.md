@@ -33,7 +33,7 @@ Por spec, sempre nesta ordem:
 6. Marcar na spec apenas os critérios comprovados por teste; os que dependem de aparelho vão em `specs/checklist-manual.md`.
 7. Após cada commit, informar: o que foi implementado e quais critérios de aceite foram atendidos (e quais ficaram pendentes).
 
-Ordem das specs: 04 persistência (feita), 01 coleta, 02 histórico, 03 mapa, 05 ícone, 06 organização.
+Specs: todas implementadas (01 coleta, 02 histórico, 03 mapa, 04 persistência, 05 ícone, 06 organização). O que resta está em `specs/checklist-manual.md` (validação em aparelho e entrega).
 
 ## Commits
 
