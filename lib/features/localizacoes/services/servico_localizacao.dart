@@ -67,6 +67,17 @@ class ServicoLocalizacao {
       ModoPrecisao.reduzida => LocationAccuracy.medium,
     };
 
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // O iOS não tem intervalo configurável nem serviço em primeiro plano:
+      // o segundo plano vem do modo "location" do Info.plist.
+      return AppleSettings(
+        accuracy: precisao,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+        allowBackgroundLocationUpdates: true,
+      );
+    }
+
     if (defaultTargetPlatform != TargetPlatform.android) {
       return LocationSettings(accuracy: precisao);
     }

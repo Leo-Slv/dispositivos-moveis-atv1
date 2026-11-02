@@ -118,18 +118,27 @@ function bloco(tipo, dados) {
   return Buffer.concat([comprimento, corpo, crc]);
 }
 
-function codificarPng(tamanho, rgba) {
+// [semAlfa] gera RGB (sem canal alfa), como exigem os ícones do iOS.
+function codificarPng(tamanho, rgba, semAlfa = false) {
+  const canais = semAlfa ? 3 : 4;
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(tamanho, 0);
   ihdr.writeUInt32BE(tamanho, 4);
   ihdr[8] = 8; // 8 bits por canal
-  ihdr[9] = 6; // RGBA
+  ihdr[9] = semAlfa ? 2 : 6; // 2 = RGB, 6 = RGBA
 
-  const linhas = Buffer.alloc(tamanho * (tamanho * 4 + 1));
+  const linhas = Buffer.alloc(tamanho * (tamanho * canais + 1));
   for (let y = 0; y < tamanho; y++) {
-    const destino = y * (tamanho * 4 + 1);
+    const destino = y * (tamanho * canais + 1);
     linhas[destino] = 0; // filtro "nenhum"
-    rgba.copy(linhas, destino + 1, y * tamanho * 4, (y + 1) * tamanho * 4);
+    if (!semAlfa) {
+      rgba.copy(linhas, destino + 1, y * tamanho * 4, (y + 1) * tamanho * 4);
+      continue;
+    }
+    for (let x = 0; x < tamanho; x++) {
+      const origem = (y * tamanho + x) * 4;
+      rgba.copy(linhas, destino + 1 + x * 3, origem, origem + 3);
+    }
   }
 
   return Buffer.concat([
@@ -140,10 +149,14 @@ function codificarPng(tamanho, rgba) {
   ]);
 }
 
-function gravar(relativo, tamanho, opcoes) {
+function gravar(relativo, tamanho, opcoes = {}) {
+  const { semAlfa = false, ...desenho } = opcoes;
   const destino = path.join(RAIZ, relativo);
   fs.mkdirSync(path.dirname(destino), { recursive: true });
-  fs.writeFileSync(destino, codificarPng(tamanho, renderizar(tamanho, opcoes)));
+  fs.writeFileSync(
+    destino,
+    codificarPng(tamanho, renderizar(tamanho, desenho), semAlfa),
+  );
   console.log(`gerado ${relativo} (${tamanho}x${tamanho})`);
 }
 
@@ -191,3 +204,13 @@ gravarTexto(
 </resources>
 `,
 );
+
+// Conjunto de ícones do iOS, conforme o Contents.json do AppIcon.
+const CONJUNTO_IOS = 'ios/Runner/Assets.xcassets/AppIcon.appiconset';
+const contents = JSON.parse(
+  fs.readFileSync(path.join(RAIZ, CONJUNTO_IOS, 'Contents.json'), 'utf8'),
+);
+for (const imagem of contents.images) {
+  const lado = Math.round(parseFloat(imagem.size) * parseInt(imagem.scale, 10));
+  gravar(`${CONJUNTO_IOS}/${imagem.filename}`, lado, { semAlfa: true });
+}
