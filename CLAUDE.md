@@ -35,6 +35,12 @@ Por spec, sempre nesta ordem:
 
 Specs: todas implementadas (01 coleta, 02 histórico, 03 mapa, 04 persistência, 05 ícone, 06 organização). O que resta está em `specs/checklist-manual.md` (validação em aparelho e entrega).
 
+## Armadilhas do Android (falham em silêncio)
+
+- O plugin de localização lança exceção dentro do `onListen` nativo se faltar permissão (ex.: `WAKE_LOCK` para `enableWakeLock`) ou ícone de notificação válido; o Flutter descarta o canal e a coleta fica muda, sem erro no app. `test/manifesto_test.dart` e `test/icone_test.dart` guardam isso.
+- Recursos acessados só por nome (`getIdentifier`), como `ic_notificacao`, são removidos pelo encolhedor de recursos do **release**. Mantê-los em `res/raw/keep.xml` e conferir no APK (`resources.arsc`) depois do build.
+- Ao mudar permissões, ícones ou recursos, gerar o APK de release e verificar o manifest/recursos dentro dele; testes de widget não pegam isso.
+
 ## Commits
 
 - Mensagens em português, formato Conventional Commits: `feat(escopo): ...`, `fix`, `test`, `docs`, `chore`, `refactor`, `ci`.
