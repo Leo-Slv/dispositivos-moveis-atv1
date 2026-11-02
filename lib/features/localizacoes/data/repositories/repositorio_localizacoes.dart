@@ -28,6 +28,15 @@ class RepositorioLocalizacoes {
     return linhas.map(Localizacao.fromMap).toList();
   }
 
+  /// Total de registros gravados, independentemente do limite da consulta.
+  Future<int> contar() async {
+    final db = await _banco.database;
+    final linhas = await db.rawQuery(
+      'SELECT COUNT(*) AS total FROM ${BancoLocalizacoes.nomeTabela}',
+    );
+    return (linhas.first['total'] as int?) ?? 0;
+  }
+
   /// Remove todas as linhas, preservando a tabela e o arquivo do banco.
   Future<void> excluirTodas() async {
     final db = await _banco.database;

@@ -43,6 +43,9 @@ class RepositorioFalso implements RepositorioLocalizacoes {
   }
 
   @override
+  Future<int> contar() async => gravadas.length;
+
+  @override
   Future<void> excluirTodas() async {
     exclusoes++;
     final erro = erroExclusao;
